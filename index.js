@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 require("dotenv").config();
-const port = process.env.PORT || 5000;
+const port= process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
@@ -20,7 +20,38 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    await client.connect();
+
+    const roomsCollection=client.db('hostelNestDB').collection('roomsDB')
+    const userCollection=client.db('hostelNestDB').collection('userDB')
+    const bookingCollection=client.db('hostelNestDB').collection('bookingDB')
+
+// user related api
+    app.post('/user',async(req,res)=>{
+      const user =req.body
+      const result=await userCollection.insertOne(user)
+      res.send(result)
+    })
+    app.get('/user',async(req,res)=>{
+      const result=await userCollection.find().toArray()
+      res.send(result)
+    })
+// booking related api
+    app.post('/booking',async(req,res)=>{
+      const bookingData=req.body
+      const result=await bookingCollection.insertOne(bookingData)
+      res.send(result)
+
+    })
+
+    app.get('/booking',async(req,res)=>{
+      const result=await bookingCollection.find().toArray()
+      res.send(result)
+    })
+
+
+
+    
+    // await client.connect();
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
@@ -32,9 +63,10 @@ async function run() {
 run().catch(console.dir);
 
 app.get("/", (req, res) => {
-  console.log("hello express and mongodb server");
+  res.send("Hello, Express and MongoDB server!");
 });
 
+
 app.listen(port, () => {
-  console.log(`hostelNest server is runnig on ${port}`);
+  console.log(`Server is running on http://localhost:${port}`);
 });
