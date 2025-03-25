@@ -59,10 +59,6 @@ async function run() {
     app.patch("/userBooking/:id", async (req, res) => {
       const id = req.params.id;
       const { userId, room_id } = req.body;
-      console.log("Received room id ID:", userId);
-      console.log("Received User ID:", userId);
-      console.log("Received seat id:", room_id);
-
       if (!ObjectId.isValid(id)) {
         return res.status(400).json({ error: "Invalid room ID" });
       }
