@@ -32,7 +32,7 @@ async function run() {
     app.get("/rooms/:id", async (req, res) => {
       const id = req.params.id;
       console.log(id);
-      const query = { _id: new ObjectId(id) }; // Convert string id to ObjectId
+      const query = { _id: new ObjectId(id) };
       const result = await roomsCollection.findOne(query);
       res.send(result);
     });
@@ -56,11 +56,39 @@ async function run() {
       res.send(result);
     });
 
+    app.patch("/userBooking/:id", async (req, res) => {
+      const id = req.params.id;
+      const { userId, room_id } = req.body;
+      console.log("Received room id ID:", userId);
+      console.log("Received User ID:", userId);
+      console.log("Received seat id:", room_id);
+
+      if (!ObjectId.isValid(id)) {
+        return res.status(400).json({ error: "Invalid room ID" });
+      }
+      const query = { _id: new ObjectId(id), "seats.id": room_id };
+      const options = { upsert: true };
+      const update = {
+        $set: {
+          "seats.$.userID": userId,
+          "seats.$.status": "booked",
+        },
+      };
+
+      try {
+        const result = await roomsCollection.updateOne(query, update, options);
+        res.send(result);
+      } catch (error) {
+        console.error("Error:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+      }
+    });
+
     app.get("/booking", async (req, res) => {
       const result = await bookingCollection.find().toArray();
       res.send(result);
     });
-
+    ///...........
     app.get("/jahid", async (req, res) => {
       try {
         const booking = await bookingCollection
@@ -116,6 +144,8 @@ async function run() {
         res.status(500).send("কিছু সমস্যা হয়েছে");
       }
     });
+
+    // ....................
 
     // await client.connect();
     console.log(
