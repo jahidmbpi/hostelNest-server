@@ -49,6 +49,38 @@ async function run() {
       const result = await userCollection.findOne(query);
       res.json(result);
     });
+
+    app.get("/user/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(id);
+      const query = { _id: new ObjectId(id) };
+      const result = await userCollection.findOne(query);
+      res.send(result);
+    });
+
+    app.get("/bookedUser", async (req, res) => {
+      try {
+        const userId = req.query.userIds;
+
+        if (!userId) {
+          return res.status(400).json({ error: "No user IDs provided" });
+        }
+
+        const userIdArray = userId.split(",");
+
+        const objectIds = userIdArray.map((id) => new ObjectId(id.toString()));
+
+        const users = await userCollection
+          .find({ _id: { $in: objectIds } })
+          .toArray();
+
+        res.json(users);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+      }
+    });
+
     // booking related api
     app.post("/booking", async (req, res) => {
       const bookingData = req.body;
@@ -137,7 +169,7 @@ async function run() {
         res.send(booking);
       } catch (error) {
         console.log(error);
-        res.status(500).send("কিছু সমস্যা হয়েছে");
+        res.status(500).send("internal server error");
       }
     });
 
