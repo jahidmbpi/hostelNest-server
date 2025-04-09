@@ -23,6 +23,34 @@ async function run() {
     const roomsCollection = client.db("hostelNestDB").collection("roomsDB");
     const userCollection = client.db("hostelNestDB").collection("userDB");
     const bookingCollection = client.db("hostelNestDB").collection("bookingDB");
+    const noticeCollection = client.db("hostelNestDB").collection("noticeDB");
+    // comment related api
+    app.post("/comment/:id", async (req, res) => {
+      const id = req.params.id;
+      const newComment = req.body;
+      console.log(newComment);
+      console.log(id);
+      const query = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const update = {
+        $push: {
+          comments: newComment,
+        },
+      };
+      const result = await noticeCollection.updateOne(query, update, options);
+      res.send(result);
+    });
+
+    // notice related api
+    app.post("/notices", async (req, res) => {
+      const notice = req.body;
+      const result = await noticeCollection.insertOne(notice);
+      res.send(result);
+    });
+    app.get("/getnotice", async (req, res) => {
+      const result = await noticeCollection.find().toArray();
+      res.send(result);
+    });
     // rooms related api
     app.get("/rooms", async (req, res) => {
       const result = await roomsCollection.find().toArray();
@@ -40,6 +68,9 @@ async function run() {
     // user related api
     app.post("/user", async (req, res) => {
       const user = req.body;
+      if (!user.role) {
+        user.role = "user";
+      }
       const result = await userCollection.insertOne(user);
       res.send(result);
     });
