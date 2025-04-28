@@ -28,8 +28,8 @@ async function run() {
     app.post("/comment/:id", async (req, res) => {
       const id = req.params.id;
       const newComment = req.body;
-      console.log(newComment);
-      console.log(id);
+      // console.log(newComment);
+      // console.log(id);
       const query = { _id: new ObjectId(id) };
       const options = { upsert: true };
       const update = {
@@ -42,6 +42,12 @@ async function run() {
     });
 
     // notice related api
+    app.get("/singleNotice/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await noticeCollection.findOne(query);
+      res.send(result);
+    });
     app.post("/notices", async (req, res) => {
       const notice = req.body;
       const result = await noticeCollection.insertOne(notice);
@@ -59,7 +65,7 @@ async function run() {
 
     app.get("/rooms/:id", async (req, res) => {
       const id = req.params.id;
-      console.log(id);
+      // console.log(id);
       const query = { _id: new ObjectId(id) };
       const result = await roomsCollection.findOne(query);
       res.send(result);
@@ -83,7 +89,7 @@ async function run() {
 
     app.get("/user/:id", async (req, res) => {
       const id = req.params.id;
-      console.log(id);
+
       const query = { _id: new ObjectId(id) };
       const result = await userCollection.findOne(query);
       res.send(result);
@@ -205,6 +211,47 @@ async function run() {
     });
 
     // ....................
+
+    app.get("/userRoomHistory/:userid", async (req, res) => {
+      try {
+        const userId = req.params.userid;
+
+        // userId দিয়ে bookingHistory খুঁজে বের করা হবে
+        const bookingHistory = await bookingCollection
+          .aggregate([
+            {
+              $match: {
+                userId: userId, // userId কে ObjectId তে কনভার্ট
+              },
+            },
+            {
+              $lookup: {
+                from: "roomsCollection",
+                localField: "bookingId",
+                foreignField: "_id",
+                as: "roomData",
+              },
+            },
+            {
+              $project: {
+                _id: 0,
+                bookingId: 1,
+                room_id: 1,
+                roomData: 1,
+                price: 1,
+                rating: 1,
+              },
+            },
+          ])
+          .toArray();
+
+        console.log(bookingHistory);
+        res.send(bookingHistory);
+      } catch (error) {
+        console.log(error);
+        res.status(500).send("internal server error");
+      }
+    });
 
     // await client.connect();
     console.log(
